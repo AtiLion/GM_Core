@@ -1,9 +1,12 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections;
+using System.Reflection;
 
 using NSEipix.View.UI;
 using NSMedieval.UI;
 using UnityEngine;
 using TMPro;
+using UnityEngine.Events;
 
 namespace GM_Core.API.UI
 {
@@ -11,7 +14,13 @@ namespace GM_Core.API.UI
     {
         internal static MainMenuView mainMenuInstance = null;
 
-        public static GameObject CreateMenuButton(string name, string text, ushort position)
+        public static IEnumerator WaitForMainMenu()
+        {
+            while (mainMenuInstance == null) yield return null;
+        }
+
+        #region Creation of UI elements
+        public static GameObject CreateMenuButton(string name, string text, ushort position, Action clickAction)
         {
             if (mainMenuInstance == null)
             {
@@ -48,14 +57,22 @@ namespace GM_Core.API.UI
                 GameObject.Destroy(newButton);
                 return null;
             }
+
+            SoundButton soundButton = newButton.GetComponent<SoundButton>();
+            if (soundButton == null)
+            {
+                GMCore.Logging.LogWarning("Failed to find SoundButton component on button!");
+                GameObject.Destroy(newButton);
+                return null;
+            }
             
             newButton.name = name;
             textMesh.text = text;
             newButton.transform.SetSiblingIndex(position);
+            soundButton.PointerClickEvent += clickAction;
 
             return newButton;
         }
-
         public static GameObject CreateDivider(ushort position)
         {
             if (mainMenuInstance == null)
@@ -83,5 +100,6 @@ namespace GM_Core.API.UI
 
             return newDivider;
         }
+        #endregion
     }
 }

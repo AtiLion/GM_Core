@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Collections;
 using UnityEngine;
 
 using NSEipix.View.UI;
@@ -15,10 +15,15 @@ namespace GM_Core.UI
 
         private void Awake()
         {
-            _btnOpenMods = MainMenuUI.CreateMenuButton("ModsButton", "Mods", 12);
+            _btnOpenMods = MainMenuUI.CreateMenuButton("ModsButton", "Mods", 12, OnModsButtonClick);
             _divOpenMods = MainMenuUI.CreateDivider(13);
             
             GMCore.Logging.LogInfo("Mods menu loaded!");
+        }
+
+        private void OnModsButtonClick()
+        {
+            
         }
     }
 }

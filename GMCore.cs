@@ -16,6 +16,8 @@ namespace GM_Core
     {
         internal static GMCore Instance { get; private set; }
         internal static ManualLogSource Logging { get; private set; }
+
+        internal ModsMenu _menuMods = null;
         
         private void Awake()
         {
@@ -28,12 +30,18 @@ namespace GM_Core
         private void OnUIViewShown(string viewName)
         {
             if (viewName != "MainMenuView") return;
-            Logging.LogInfo("Main menu UI has been shown!");
-            
-            MainMenuUI.mainMenuInstance = GameObject.FindObjectOfType<MainMenuView>();
-            if (MainMenuUI.mainMenuInstance == null) return;
 
-            MainMenuUI.mainMenuInstance.gameObject.AddComponent<ModsMenu>();
+            // Due to this triggering multiple times, we should only assign it once the game object isn't active
+            if (MainMenuUI.mainMenuInstance == null)
+            {
+                Logging.LogInfo("Populating mainMenuInstance field as it was null!");
+                MainMenuUI.mainMenuInstance = GameObject.FindObjectOfType<MainMenuView>();
+                if (MainMenuUI.mainMenuInstance == null) return;
+            }
+
+            // Prevent creation of multiple instances of the mods menu, as the event is called every time the menu is switched
+            if(_menuMods == null)
+                _menuMods = MainMenuUI.mainMenuInstance.gameObject.AddComponent<ModsMenu>();
         }
     }
 }
