@@ -3,11 +3,13 @@
 using BepInEx;
 using BepInEx.Logging;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 using NSMedieval.UI;
 
 using GM_Core.API.UI;
 using GM_Core.UI;
+using GM_Core.Core;
 
 namespace GM_Core
 {
@@ -18,19 +20,21 @@ namespace GM_Core
         internal static ManualLogSource Logging { get; private set; }
 
         internal ModsMenu _menuMods = null;
+        internal PluginLoader _pluginLoader = null;
         
-        private void Awake()
+        void Awake()
         {
             Instance = this;
             Logging = Logger;
 
+            _pluginLoader = gameObject.AddComponent<PluginLoader>();
+
             SceneUIManager.OnViewShown += OnUIViewShown;
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
-        private void OnUIViewShown(string viewName)
+        private void InvokeHomeScene()
         {
-            if (viewName != "MainMenuView") return;
-
             // Due to this triggering multiple times, we should only assign it once the game object isn't active
             if (MainMenuUI.mainMenuInstance == null)
             {
@@ -40,8 +44,26 @@ namespace GM_Core
             }
 
             // Prevent creation of multiple instances of the mods menu, as the event is called every time the menu is switched
-            if(_menuMods == null)
+            if (_menuMods == null)
                 _menuMods = MainMenuUI.mainMenuInstance.gameObject.AddComponent<ModsMenu>();
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            Logger.LogInfo("Loaded Scene: " + scene.name);
+
+            switch(scene.name)
+            {
+                case "HomeScene":
+                    InvokeHomeScene();
+                    break;
+                default:
+                    break;
+            }
+        }
+        private void OnUIViewShown(string viewName)
+        {
+            Logger.LogInfo("Shown UI: " + viewName);
         }
     }
 }

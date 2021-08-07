@@ -1,6 +1,9 @@
 Assembly-CSharp.dll
 BepInEx.dll
+BepInEx.Harmony.dll
 Unity.TextMeshPro.dll
 UnityEngine.CoreModule.dll
 UnityEngine.dll
 UnityEngine.UI.dll
+Newtonsoft.Json.dll
+0Harmony.dll
