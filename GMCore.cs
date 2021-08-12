@@ -22,6 +22,8 @@ namespace GM_Core
         internal ModsMenu _menuMods = null;
         internal PluginLoader _pluginLoader = null;
         
+        // Setup all of the easily accessible variables and load the PluginLoader game object to load game specific plugins
+        // Then we also setup the events to trigger different parts of the mod based on different events
         void Awake()
         {
             Instance = this;
@@ -33,6 +35,8 @@ namespace GM_Core
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
+        // Called when the home screen/main menu is loaded as a scene
+        // Then we setup the MainMenuUI's required variables and load the ModsMenu game object to create a mods menu in the main menu
         private void InvokeHomeScene()
         {
             // Due to this triggering multiple times, we should only assign it once the game object isn't active
@@ -48,6 +52,7 @@ namespace GM_Core
                 _menuMods = MainMenuUI.mainMenuInstance.gameObject.AddComponent<ModsMenu>();
         }
 
+        // Used for detecting scene changes and loading of scenes to do different actions based on which scene is loaded
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             Logger.LogInfo("Loaded Scene: " + scene.name);

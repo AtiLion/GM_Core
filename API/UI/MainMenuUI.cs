@@ -14,12 +14,24 @@ namespace GM_Core.API.UI
     {
         internal static MainMenuView mainMenuInstance = null;
 
+        /// <summary>
+        /// A coroutine pause that you can call yield on to wait for the main menu to be loaded
+        /// </summary>
+        /// <returns>Coroutine that waits for the main menu to be loaded</returns>
         public static IEnumerator WaitForMainMenu()
         {
             while (mainMenuInstance == null) yield return null;
         }
 
         #region Creation of UI elements
+        /// <summary>
+        /// Creates a main menu button on the specified position, which triggers the specified action once clicked
+        /// </summary>
+        /// <param name="name">The name of the button to assign to it</param>
+        /// <param name="text">The text within the button</param>
+        /// <param name="position">The index based position of the button on the list of menu buttons</param>
+        /// <param name="clickAction">Executed when the user clicks on the button</param>
+        /// <returns>Returns the menu button game object</returns>
         public static GameObject CreateMenuButton(string name, string text, ushort position, Action clickAction)
         {
             if (mainMenuInstance == null)
@@ -73,6 +85,11 @@ namespace GM_Core.API.UI
 
             return newButton;
         }
+        /// <summary>
+        /// Creates a divider between the main menu items/buttons at the specified position
+        /// </summary>
+        /// <param name="position">The index based position where the divider should be inserted into</param>
+        /// <returns>The gameobject of the divider that was created</returns>
         public static GameObject CreateDivider(ushort position)
         {
             if (mainMenuInstance == null)

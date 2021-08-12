@@ -29,16 +29,11 @@ namespace GM_Core.Core
         private static MethodInfo _methodReadFile = null;
         private static HarmonyMethod _harmonyReadFile = null;
 
+        // Create the harmony instance and override the FileReaders ReadFile function to use it for JSON mods
+        // After that load the JSON mods into _virtualToRealConfig in order to use them for merging when the game loads the JSON file
         void Awake()
         {
             _harmonyInstance = new Harmony("atilion.mods.GMCore.PluginLoader");
-
-            Type t = typeof(NSMedieval.Construction.GraveRepository).Module.GetType("NSEipix.ObjectMapper.JsonSerializer`1");
-            if (t == null)
-            {
-                GMCore.Logging.LogWarning("Failed to find JsonSerializer class! Ignoring JSON mods...");
-                return;
-            }
 
             _methodReadFile = FileReaders.Get.GetType().GetMethod("ReadFile", BindingFlags.Public | BindingFlags.Instance);
             _harmonyReadFile = new HarmonyMethod(typeof(PluginLoader).GetMethod("FileReaders_ReadFile", BindingFlags.NonPublic | BindingFlags.Static));
