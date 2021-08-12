@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using BepInEx;
@@ -14,25 +15,35 @@ using HarmonyLib;
 
 using UnityEngine;
 
+using NSEipix;
+using NSEipix.FileReader;
+
 namespace GM_Core.Core
 {
     internal class PluginLoader : MonoBehaviour
     {
         private Harmony _harmonyInstance;
 
-        private static Dictionary<string, string> _virtualToRealConfig = new Dictionary<string, string>(); // Bad life decisions up ahead
+        private static Dictionary<string, List<string>> _virtualToRealConfig = new Dictionary<string, List<string>>(); // Bad life decisions up ahead
 
-        private static MethodInfo _methodDeserializeJson = null;
-        private static HarmonyMethod _harmonyDeserializeJson = null;
+        private static MethodInfo _methodReadFile = null;
+        private static HarmonyMethod _harmonyReadFile = null;
 
         void Awake()
         {
             _harmonyInstance = new Harmony("atilion.mods.GMCore.PluginLoader");
 
-            _methodDeserializeJson = typeof(NSMedieval.Construction.GraveRepository).BaseType.GetMethod("Deserialize", BindingFlags.Instance | BindingFlags.NonPublic);
-            _harmonyDeserializeJson = new HarmonyMethod(typeof(PluginLoader).GetMethod("JSON_Deserialize", BindingFlags.Static | BindingFlags.NonPublic));
+            Type t = typeof(NSMedieval.Construction.GraveRepository).Module.GetType("NSEipix.ObjectMapper.JsonSerializer`1");
+            if (t == null)
+            {
+                GMCore.Logging.LogWarning("Failed to find JsonSerializer class! Ignoring JSON mods...");
+                return;
+            }
 
-            _harmonyInstance.Patch(_methodDeserializeJson, postfix: _harmonyDeserializeJson);
+            _methodReadFile = FileReaders.Get.GetType().GetMethod("ReadFile", BindingFlags.Public | BindingFlags.Instance);
+            _harmonyReadFile = new HarmonyMethod(typeof(PluginLoader).GetMethod("FileReaders_ReadFile", BindingFlags.NonPublic | BindingFlags.Static));
+
+            _harmonyInstance.Patch(_methodReadFile, postfix: _harmonyReadFile);
 
             foreach(string pluginDir in Directory.GetDirectories(Paths.PluginPath))
             {
@@ -45,27 +56,38 @@ namespace GM_Core.Core
             }
         }
 
-        // Called when the JsonRepository in the game finishes deserialization of the file
-        // Then we apply our new JSON values to the old ones???
-        private static void JSON_Deserialize(object __instance)
+        // The ReadFile gets called each time we try to read any text based file from the game's save directory or root directory
+        // To inject our own json files we wait for the function to load the text, we load any of our existing JSONs and merge them
+        // Then we simply convert the new merged JObject back to JSON and return it as text
+        // WARNING: Some problems can occur when multiple JSON files are overriding one another, still have to fix it by ignoring original data
+        private static void FileReaders_ReadFile(IFileReader __instance, string __result, ref string fileName)
         {
-            MethodInfo miJsonFile = __instance.GetType().GetMethod("JsonFile", BindingFlags.Instance | BindingFlags.NonPublic);
-            if (miJsonFile == null) return;
-
-            string virtualPath = (string)miJsonFile.Invoke(__instance, new object[0]);
-            GMCore.Logging.LogInfo("Detected JSON load hit! " + virtualPath);
-            if (!_virtualToRealConfig.ContainsKey(virtualPath)) return;
-
-            string customJson = File.ReadAllText(_virtualToRealConfig[virtualPath]);
-            if (string.IsNullOrEmpty(customJson)) return;
+            if (!fileName.EndsWith(".json") || !_virtualToRealConfig.ContainsKey(fileName)) return;
+            GMCore.Logging.LogInfo("Found modded JSON request for " + fileName);
 
             try
             {
-                object customObject = JsonUtility.FromJson(customJson, __instance.GetType().BaseType.GetGenericArguments()[1]);
+                JObject originalJObject = JObject.Parse(__result);
+                JObject newJObject = (JObject)originalJObject.DeepClone();
 
-                GMCore.Logging.LogInfo("Successfully loaded custom JSON object for " + virtualPath);
+                foreach(string jsonPath in _virtualToRealConfig[fileName])
+                {
+                    try
+                    {
+                        JObject modifiedJObject = JObject.Parse(File.ReadAllText(jsonPath));
+
+                        newJObject.Merge(modifiedJObject, new JsonMergeSettings
+                        {
+                            MergeArrayHandling = MergeArrayHandling.Merge,
+                            MergeNullValueHandling = MergeNullValueHandling.Merge
+                        });
+                    }
+                    catch(Exception ex) { GMCore.Logging.LogError(ex); }
+                }
+
+                __result = newJObject.ToString(Formatting.None);
             }
-            catch(Exception e) { GMCore.Logging.LogError(e); }
+            catch(Exception ex) { GMCore.Logging.LogError(ex); }
         }
 
         // Loads the JSON modifications of each plugin with a virtual and physical path
@@ -86,7 +108,16 @@ namespace GM_Core.Core
             // Handle file loading
             if (!virtualPath.EndsWith(".json")) return;
             GMCore.Logging.LogInfo("Found JSON plugin file: " + virtualPath);
-            _virtualToRealConfig.Add(virtualPath, path);
+
+            List<string> jsonPaths;
+            if (_virtualToRealConfig.ContainsKey(virtualPath))
+                jsonPaths = _virtualToRealConfig[virtualPath];
+            else
+            {
+                jsonPaths = new List<string>();
+                _virtualToRealConfig.Add(virtualPath, jsonPaths);
+            }
+            jsonPaths.Add(path);
         }
     }
 }

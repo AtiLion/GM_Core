@@ -29,6 +29,9 @@
       <Reference Include="BepInEx.Harmony">
         <HintPath>libs\BepInEx.Harmony.dll</HintPath>
       </Reference>
+      <Reference Include="netstandard">
+        <HintPath>libs\netstandard.dll</HintPath>
+      </Reference>
       <Reference Include="Newtonsoft.Json">
         <HintPath>libs\Newtonsoft.Json.dll</HintPath>
       </Reference>

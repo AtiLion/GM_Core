@@ -8,3 +8,4 @@ UnityEngine.UI.dll
 Newtonsoft.Json.dll
 0Harmony.dll
 UnityEngine.JSONSerializeModule.dll
+netstandard.dll
