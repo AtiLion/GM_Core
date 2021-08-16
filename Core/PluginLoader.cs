@@ -29,6 +29,8 @@ namespace GM_Core.Core
         private static MethodInfo _methodReadFile = null;
         private static HarmonyMethod _harmonyReadFile = null;
 
+        internal List<string> _pluginList = new List<string>();
+
         // Create the harmony instance and override the FileReaders ReadFile function to use it for JSON mods
         // After that load the JSON mods into _virtualToRealConfig in order to use them for merging when the game loads the JSON file
         void Awake()
@@ -47,7 +49,10 @@ namespace GM_Core.Core
                 // Load JSON mods
                 string jsonPath = pluginDir + "\\JSON";
                 if (Directory.Exists(jsonPath))
+                {
                     LoadJSONPlugin(jsonPath, "");
+                    _pluginList.Add(Path.GetFileName(pluginDir));
+                }
             }
         }
 

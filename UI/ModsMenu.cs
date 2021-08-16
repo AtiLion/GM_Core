@@ -15,7 +15,9 @@ namespace GM_Core.UI
         private GameObject _btnOpenMods;
         private GameObject _divOpenMods;
 
-        private GameObject _modsMenuView;
+        internal GameObject _modsMenuView;
+        internal ModsView _modsView;
+        internal GameObject _loadGameView;
 
         private void Awake()
         {
@@ -42,14 +44,14 @@ namespace GM_Core.UI
         {
             GameObject[] gameObjects = Resources.FindObjectsOfTypeAll<GameObject>();
 
-            GameObject loadGameView = gameObjects.FirstOrDefault(obj => obj.name == "LoadGameView");
-            if(loadGameView == null)
+            _loadGameView = gameObjects.FirstOrDefault(obj => obj.name == "LoadGameView");
+            if(_loadGameView == null)
             {
                 GMCore.Logging.LogWarning("Failed to find LoadGameView!");
                 return false;
             }
 
-            _modsMenuView = GameObject.Instantiate(loadGameView, loadGameView.transform.parent);
+            _modsMenuView = GameObject.Instantiate(_loadGameView, _loadGameView.transform.parent);
             if(_modsMenuView == null)
             {
                 GMCore.Logging.LogWarning("Failed to duplicate LoadGameView!");
@@ -69,8 +71,11 @@ namespace GM_Core.UI
                 GMCore.Logging.LogWarning("Failed to find TextMeshProUGUI object in title object!");
                 return false;
             }
-            GMCore.Logging.LogInfo("Title game object name: " + titleObject.name);
-            GMCore.Logging.LogInfo("Current title: " + titleText.text);
+
+            GameObject.DestroyImmediate(titleObject.GetComponent<I2.Loc.Localize>());
+            GameObject.Destroy(_modsMenuView.GetComponent<NSMedieval.UI.ProfilesView>());
+
+            _modsView = _modsMenuView.AddComponent<ModsView>();
 
             titleText.text = "Mods";
             _modsMenuView.name = "ModsView";
@@ -79,7 +84,7 @@ namespace GM_Core.UI
 
         private void OnModsButtonClick()
         {
-            _modsMenuView.SetActive(!_modsMenuView.activeSelf);
+            MainMenuUI.mainMenuInstance.SceneUIManager.ShowNewView(_modsView);
         }
     }
 }

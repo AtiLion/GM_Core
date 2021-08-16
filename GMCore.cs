@@ -19,8 +19,8 @@ namespace GM_Core
         internal static GMCore Instance { get; private set; }
         internal static ManualLogSource Logging { get; private set; }
 
-        internal ModsMenu _menuMods = null;
-        internal PluginLoader _pluginLoader = null;
+        internal ModsMenu _menuMods;
+        internal PluginLoader _pluginLoader;
         
         // Setup all of the easily accessible variables and load the PluginLoader game object to load game specific plugins
         // Then we also setup the events to trigger different parts of the mod based on different events
