@@ -1,5 +1,6 @@
 # Going Medieval Core
 GMCore or Going Medieval Core is a core mod that makes it easier to develop mods for the game Going Medieval.
+[![Discord](https://img.shields.io/badge/Discord-Going%20Medieval%20Modding-blue?style=for-the-badge&logo=discord)](https://discord.gg/3nwPCtfW)
 
 **This is still incomplete! All features are still getting changed and removed.**
 
